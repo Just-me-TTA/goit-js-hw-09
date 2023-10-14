@@ -1,75 +1,75 @@
-import flatpickr from 'flatpickr';
-import Notiflix from 'notiflix';
-import 'notiflix/dist/notiflix-3.2.6.min.css';
-import 'flatpickr/dist/flatpickr.min.css';
+import flatpickr from "flatpickr";
+import "flatpickr/dist/flatpickr.min.css";
 
-const dateInput = document.querySelector('#datetime-picker');
-const startBtn = document.querySelector('button[data-start]');
-const days = document.querySelector('span[data-days]');
-const hours = document.querySelector('span[data-hours]');
-const minutes = document.querySelector('span[data-minutes]');
-const seconds = document.querySelector('span[data-seconds]');
-
-startBtn.addEventListener('click', startTimer);
-startBtn.disabled = true;
-let timerId = null;
-
-const flatpickrr = new flatpickr(dateInput, {
+const options = {
   enableTime: true,
   time_24hr: true,
   defaultDate: new Date(),
   minuteIncrement: 1,
   onClose(selectedDates) {
-    if (selectedDates[0].getTime() < Date.now()) {
-      errorTime();
+    const selectedDate = selectedDates[0];
+    if (selectedDate <= new Date()) {
+      window.alert("Please choose a date in the future");
+      document.querySelector('[data-start]').setAttribute('disabled', 'true');
     } else {
-      startBtn.disabled = false;
+      document.querySelector('[data-start]').removeAttribute('disabled');
     }
   },
-});
+};
 
-function errorTime() {
-  Notiflix.Notify.failure('Please choose a date in the future');
-  startBtn.disabled = true;
-}
+flatpickr("#datetime-picker", options);
 
-function startTimer() {
-  dateInput.disabled = true;
-  timerId = setInterval(() => {
-    updateTime();
-  }, 1000);
-  startBtn.disabled = true;
-}
+const startButton = document.querySelector('[data-start]');
+const timerFields = document.querySelectorAll('.value');
 
-function updateTime() {
-  const date = new Date();
-  const ms = flatpickrr.selectedDates[0].getTime() - date.getTime();
-  if (ms < 0) {
-    clearTimeout(timerId);
-    dateInput.disabled = false;
-    return;
+let countdownInterval;
+
+startButton.addEventListener('click', () => {
+  const selectedDate = new Date(document.querySelector("#datetime-picker").value);
+
+  countdownInterval = setInterval(updateCountdown, 1000);
+
+  startButton.disabled = true;
+
+  function updateCountdown() {
+    const currentTime = new Date();
+    const timeRemaining = selectedDate - currentTime;
+
+    if (timeRemaining <= 0) {
+      // Countdown is complete
+      clearInterval(countdownInterval);
+      displayTimeLeft(0);
+      startButton.disabled = false;
+      return;
+    }
+
+    const { days, hours, minutes, seconds } = convertMs(timeRemaining);
+
+    displayTimeLeft(days, hours, minutes, seconds);
   }
-  const stayTime = convertMs(ms);
-  days.textContent = addLeadingZero(stayTime.days);
-  hours.textContent = addLeadingZero(stayTime.hours);
-  minutes.textContent = addLeadingZero(stayTime.minutes);
-  seconds.textContent = addLeadingZero(stayTime.seconds);
-}
 
-function addLeadingZero(value) {
-  return value.toString().padStart(2, '0');
-}
+  function displayTimeLeft(days, hours, minutes, seconds) {
+    timerFields[0].textContent = addLeadingZero(days);
+    timerFields[1].textContent = addLeadingZero(hours);
+    timerFields[2].textContent = addLeadingZero(minutes);
+    timerFields[3].textContent = addLeadingZero(seconds);
+  }
 
-function convertMs(ms) {
-  const second = 1000;
-  const minute = second * 60;
-  const hour = minute * 60;
-  const day = hour * 24;
+  function convertMs(ms) {
+    const second = 1000;
+    const minute = second * 60;
+    const hour = minute * 60;
+    const day = hour * 24;
 
-  const days = Math.floor(ms / day);
-  const hours = Math.floor((ms % day) / hour);
-  const minutes = Math.floor(((ms % day) % hour) / minute);
-  const seconds = Math.floor((((ms % day) % hour) % minute) / second);
+    const days = Math.floor(ms / day);
+    const hours = Math.floor((ms % day) / hour);
+    const minutes = Math.floor(((ms % day) % hour) / minute);
+    const seconds = Math.floor((((ms % day) % hour) % minute) / second);
 
-  return { days, hours, minutes, seconds };
-}
+    return { days, hours, minutes, seconds };
+  }
+
+  function addLeadingZero(value) {
+    return value < 10 ? `0${value}` : value;
+  }
+});

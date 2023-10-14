@@ -5,7 +5,7 @@ const form = document.querySelector('.form');
 const btn = document.querySelector('button');
 form.addEventListener('submit', startCreate);
 
-function startCreate(event) {
+async function startCreate(event) {
   event.preventDefault();
   btn.disabled = true;
   let delay = Number(form.elements.delay.value);
@@ -15,17 +15,15 @@ function startCreate(event) {
   for (let index = 0; index < amount; index++) {
     let promiseDelay = delay + step * index;
     let position = index + 1;
-    createPromise(position, promiseDelay)
-      .then(({ position, delay }) =>
-        Notiflix.Notify.success(`Fulfilled promise ${position} in ${delay}ms`)
-      )
-      .catch(({ position, delay }) =>
-        Notiflix.Notify.failure(`Rejected promise ${position} in ${delay}ms`)
-      );
+    try {
+      const result = await createPromise(position, promiseDelay);
+      Notiflix.Notify.success(`Fulfilled promise ${result.position} in ${result.delay}ms`);
+    } catch (error) {
+      Notiflix.Notify.failure(`Rejected promise ${error.position} in ${error.delay}ms`);
+    }
   }
-  setTimeout(() => {
-    btn.disabled = false;
-  }, delay + step * amount);
+
+  btn.disabled = false;
   form.reset();
 }
 
@@ -41,3 +39,4 @@ function createPromise(position, delay) {
     }, delay);
   });
 }
+
