@@ -5,26 +5,36 @@ const form = document.querySelector('.form');
 const btn = document.querySelector('button');
 form.addEventListener('submit', startCreate);
 
-async function startCreate(event) {
+function startCreate(event) {
   event.preventDefault();
   btn.disabled = true;
-  let delay = Number(form.elements.delay.value);
-  let step = Number(form.elements.step.value);
-  let amount = Number(form.elements.amount.value);
+  const delay = Number(form.elements.delay.value);
+  const step = Number(form.elements.step.value);
+  const amount = Number(form.elements.amount.value);
+  let promisesCreated = 0;
 
-  for (let index = 0; index < amount; index++) {
-    let promiseDelay = delay + step * index;
-    let position = index + 1;
-    try {
-      const result = await createPromise(position, promiseDelay);
-      Notiflix.Notify.success(`Fulfilled promise ${result.position} in ${result.delay}ms`);
-    } catch (error) {
-      Notiflix.Notify.failure(`Rejected promise ${error.position} in ${error.delay}ms`);
-    }
+  function handleCreatePromise(position, promiseDelay) {
+    createPromise(position, promiseDelay)
+      .then(({ position, delay }) =>
+        Notiflix.Notify.success(`Fulfilled promise ${position} in ${delay}ms`)
+      )
+      .catch(({ position, delay }) =>
+        Notiflix.Notify.failure(`Rejected promise ${position} in ${delay}ms`)
+      )
+      .finally(() => {
+        promisesCreated++;
+        if (promisesCreated === amount) {
+          btn.disabled = false;
+          form.reset();
+        }
+      });
   }
 
-  btn.disabled = false;
-  form.reset();
+  for (let index = 0; index < amount; index++) {
+    const promiseDelay = delay + step * index;
+    const position = index + 1;
+    handleCreatePromise(position, promiseDelay);
+  }
 }
 
 function createPromise(position, delay) {
@@ -39,4 +49,3 @@ function createPromise(position, delay) {
     }, delay);
   });
 }
-
