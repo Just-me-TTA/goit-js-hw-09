@@ -35,13 +35,17 @@ startButton.addEventListener('click', () => {
     const currentTime = new Date();
     const timeRemaining = selectedDate - currentTime;
 
-    if (timeRemaining <= 0) {
-      // Countdown is complete
-      clearInterval(countdownInterval);
-      displayTimeLeft(0);
-      startButton.disabled = false;
-      return;
-    }
+   if (timeRemaining <= 0) {
+  // Countdown is complete
+  clearInterval(countdownInterval);
+  timerFields[0].textContent = "00";
+  timerFields[1].textContent = "00";
+  timerFields[2].textContent = "00";
+  timerFields[3].textContent = "00";
+  startButton.disabled = false;
+  return;
+}
+
 
     const { days, hours, minutes, seconds } = convertMs(timeRemaining);
 
@@ -64,7 +68,7 @@ startButton.addEventListener('click', () => {
     const days = Math.floor(ms / day);
     const hours = Math.floor((ms % day) / hour);
     const minutes = Math.floor(((ms % day) % hour) / minute);
-    const seconds = Math.floor((((ms % day) % hour) % minute) / second);
+    const seconds = Math.floor(((ms % day) % minute) / second);
 
     return { days, hours, minutes, seconds };
   }
